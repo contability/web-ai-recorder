@@ -1,8 +1,12 @@
+import { useDatabase } from "@/components/data-context";
 import Header from "@/components/header";
 import { formatTime } from "@/modules/util";
+import { useRouter } from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 const RecorderPage = () => {
+  const router = useRouter();
+
   const [state, setState] = useState<"recording" | "paused" | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
   const [time, setTime] = useState(0);
@@ -29,6 +33,44 @@ const RecorderPage = () => {
     setToastVisible(true);
   }, []);
 
+  const { create } = useDatabase();
+
+  const transcribeAudio = useCallback(
+    async ({ url, extension }: { url: string; extension: string }) => {
+      // url로 부터 blob을 가져와야 함.
+      const response = await fetch(url);
+      // 해당 오디오 blob
+      const audioBlob = await response.blob();
+
+      const formData = new FormData();
+      formData.append("file", audioBlob, `recording.${extension}`);
+
+      const transcriptionResponse = await fetch("/api/transcribe", {
+        method: "POST",
+        body: formData,
+      });
+      const data = (await transcriptionResponse.json()) as {
+        transcription: {
+          text: string;
+          segments: Array<{ start: number; end: number; text: string }>;
+        };
+      };
+      console.log(data);
+      const id = `${Date.now()}`;
+      create({
+        id,
+        text: data.transcription.text,
+        scripts: data.transcription.segments.map((seg) => ({
+          start: seg.start,
+          end: seg.end,
+          text: seg.text.trim(),
+        })),
+      });
+      router.push(`/recording/${id}`);
+    },
+    [create, router]
+  );
+
   const onStartRecord = useCallback(() => {
     setTime(0);
     setAudioUrl(null);
@@ -38,13 +80,14 @@ const RecorderPage = () => {
 
   // url: 녹음이 저장될 주소
   const onStopRecord = useCallback(
-    ({ url }: { url: string }) => {
+    ({ url, extension }: { url: string; extension: string }) => {
       setAudioUrl(url);
       setState(null);
       stopTimer();
       showToast();
+      transcribeAudio({ url, extension });
     },
-    [showToast, stopTimer]
+    [showToast, stopTimer, transcribeAudio]
   );
 
   const record = useCallback(() => {
@@ -62,20 +105,20 @@ const RecorderPage = () => {
         mediaRecorder.onstart = () => {
           onStartRecord();
         };
-        // 녹음 중일 때 데이터 처리
+        // 녹음 중일 때 데이터 처리.
         mediaRecorder.ondataavailable = (event) => {
           chunksRef.current.push(event.data);
         };
-        // 녹음 종료될 때 실행
+        // 녹음 종료될 때 실행.
         mediaRecorder.onstop = () => {
-          // blob 객체를 가져와서 url을 뽑아내는 작업
+          // blob 객체를 가져와서 url을 뽑아내는 작업.
           const blob = new Blob(chunksRef.current, {
             type: chunksRef.current[0].type,
           });
           // 다음 녹음을 위해 청크 어레이는 비워줌.
           chunksRef.current = [];
           const url = URL.createObjectURL(blob);
-          onStopRecord({ url });
+          onStopRecord({ url, extension: "webm" });
           // 오디오를 다 가져와서 멈춰줘야 브라우저 녹음 상태가 종료됨.
           stream.getAudioTracks().forEach((track) => track.stop());
         };
