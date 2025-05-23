@@ -22,6 +22,8 @@ export type Data = {
   text: string;
   // 시간별 스크립트
   scripts: Script[];
+  // 요약 텍스트
+  summary?: string;
 };
 
 type Database = {
@@ -31,6 +33,7 @@ type Database = {
 type ScriptContextType = {
   create: (data: Data) => void;
   get: ({ id }: { id: string }) => Data | undefined;
+  update: ({ id, summary }: { id: string; summary?: string }) => void;
 };
 
 const ScriptContext = createContext<ScriptContextType | undefined>(undefined);
@@ -47,8 +50,25 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
   const get = useCallback(({ id }: { id: string }) => database[id], [database]);
 
+  const update = useCallback(
+    ({ id, summary }: { id: string; summary?: string }) => {
+      setDatabase((prevDatabase) => {
+        const prevData = prevDatabase[id];
+        if (prevData == null) return prevDatabase;
+        return {
+          ...prevDatabase,
+          [id]: {
+            ...prevData,
+            ...(summary != null ? { summary } : {}),
+          },
+        };
+      });
+    },
+    []
+  );
+
   return (
-    <ScriptContext.Provider value={{ create, get }}>
+    <ScriptContext.Provider value={{ create, get, update }}>
       {children}
     </ScriptContext.Provider>
   );

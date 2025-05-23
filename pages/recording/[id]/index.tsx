@@ -3,6 +3,7 @@ import Header from "@/components/header";
 import { formatTime } from "@/modules/util";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useState } from "react";
+import { TailSpin } from "react-loader-spinner";
 
 const Tab = ({
   title,
@@ -59,8 +60,7 @@ const Summary = ({ text, loading }: { text?: string; loading?: boolean }) => {
     <div className="h-full pt-[22px] px-[20px]">
       {loading ? (
         <div className="flex items-center justify-center h-full w-full">
-          {/* <TailSpin color={"#09CC7F"} width={50} height={50} /> */}
-          로딩
+          <TailSpin color={"#09CC7F"} width={50} height={50} />
         </div>
       ) : (
         <div className="text-[15px] font-[400] text-[#1A1A1A]">{text}</div>
@@ -71,7 +71,6 @@ const Summary = ({ text, loading }: { text?: string; loading?: boolean }) => {
 
 const Recording = () => {
   const router = useRouter();
-
   const [data, setData] = useState<Data | null>(null);
   const { get, update } = useDatabase();
 
@@ -101,12 +100,9 @@ const Recording = () => {
   const onPressSummarize = useCallback(async () => {
     const text = data?.text;
 
-    if (text == null || typeof router.query.id != "string") {
-      return;
-    }
+    if (text == null || typeof router.query.id !== "string") return;
 
     setSummarizing(true);
-
     try {
       setFocusedTab("summary");
 
@@ -168,7 +164,7 @@ const Recording = () => {
           onClick={onPressSummaryTab}
         />
       </div>
-      {/* {!summarizing && data?.summary == null && (
+      {!summarizing && data?.summary == null && (
         <button
           className="relative bg-[#09CC7F] mb-[18px] flex justify-center items-center py-[13px] rounded-[6px] text-[16px] font-[700] text-[#FFFFFF] mx-[16px] mt-[24px]"
           onClick={onPressSummarize}
@@ -178,14 +174,14 @@ const Recording = () => {
             east
           </span>
         </button>
-      )} */}
+      )}
       <div className="flex-1 overflow-y-scroll overscroll-none">
         {focusedTab === "script" && data?.scripts != null && (
           <Script scripts={data.scripts} onPressSummarize={onPressSummarize} />
         )}
-        {/* {focusedTab === "summary" && (
+        {focusedTab === "summary" && (
           <Summary text={data?.summary} loading={summarizing} />
-        )} */}
+        )}
       </div>
     </div>
   );

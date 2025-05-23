@@ -1,40 +1,19 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# chatGPT API 활용 클로바ST 녹음요약 앱 프로젝트 웹 파트
 
-## Getting Started
+## 프로젝트 소개
 
-First, run the development server:
+이 프로젝트는 사용자의 음성 녹음을 텍스트로 변환하고 요약해주는 웹 애플리케이션이다. OpenAI의 ChatGPT API와 Whisper 모델을 활용하여 음성-텍스트 변환(STT)과 텍스트 요약 기능을 제공한다. 사용자는 웹 인터페이스를 통해 음성을 녹음하고, 녹음된 내용을 텍스트로 변환한 후 핵심 내용을 한 문장으로 요약받을 수 있다.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 내용
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- 웹 브라우저에서 음성 녹음
+- 녹음된 오디오를 텍스트로 변환 (OpenAI Whisper API 활용)
+- 텍스트 내용 요약 (ChatGPT API 활용)
+- 녹음 기록 저장 및 관리
 
-You can start editing the page by modifying `pages/index.tsx`. The page auto-updates as you edit the file.
+## 기술 스택
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.ts`.
-
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
-
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+- Next.js 및 React
+- TypeScript
+- TailwindCSS
+- OpenAI API (GPT-3.5 Turbo, Whisper)
