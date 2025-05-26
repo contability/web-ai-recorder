@@ -90,7 +90,59 @@ const RecorderPage = () => {
     [showToast, stopTimer, transcribeAudio]
   );
 
+  const onPauseRecord = useCallback(() => {
+    stopTimer();
+    setState("paused");
+  }, [stopTimer]);
+
+  const onResumeRecord = useCallback(() => {
+    startTimer();
+    setState("recording");
+  }, [startTimer]);
+
+  // ReactNativeWebview가 window 객체 안에 있다면 웹뷰를 이용해 앱으로 띄워졌다는 뜻.
+  const hasReactNativeWebview =
+    typeof window !== "undefined" && window.ReactNativeWebView !== null;
+
+  const postMessageToRN = useCallback(
+    ({ type, data }: { type: string; data?: any }) => {
+      window.ReactNativeWebView?.postMessage(JSON.stringify({ type, data }));
+    },
+    []
+  );
+
+  useEffect(() => {
+    if (hasReactNativeWebview) {
+      const handleMessage = (event: any) => {
+        console.log("🚀 ~ handleMessage ~ event:", event);
+        const { type, data } = JSON.parse(event.data);
+        if (type === "onStartRecord") {
+          onStartRecord();
+        } else if (type === "onStopRecord") {
+          // onStopRecord({url, extension:"webm"});
+        } else if (type === "onPauseRecord") {
+          onPauseRecord();
+        } else if (type === "onResumeRecord") {
+          onResumeRecord();
+        }
+      };
+      // 2개 다 넣어줘야 iOS, android 둘다 적용 됨.
+      window.addEventListener("message", handleMessage);
+      document.addEventListener("message", handleMessage);
+
+      return () => {
+        window.removeEventListener("message", handleMessage);
+        document.removeEventListener("message", handleMessage);
+      };
+    }
+  }, [hasReactNativeWebview, onPauseRecord, onResumeRecord, onStartRecord]);
+
   const record = useCallback(() => {
+    if (hasReactNativeWebview) {
+      // 웹뷰를 통해 앱으로 띄워졌다면 앱으로 start-record라는 메시지를 보냄.
+      postMessageToRN({ type: "start-record" });
+      return;
+    }
     navigator.mediaDevices
       .getUserMedia({
         audio: true,
@@ -125,19 +177,31 @@ const RecorderPage = () => {
 
         mediaRecorder.start();
       });
-  }, [onStartRecord, onStopRecord]);
+  }, [hasReactNativeWebview, onStartRecord, onStopRecord, postMessageToRN]);
 
   const stop = useCallback(() => {
+    if (hasReactNativeWebview) {
+      postMessageToRN({ type: "stop-record" });
+      return;
+    }
     if (mediaRecorderRef.current) mediaRecorderRef.current.stop();
-  }, []);
+  }, [hasReactNativeWebview, postMessageToRN]);
 
   const pause = useCallback(() => {
+    if (hasReactNativeWebview) {
+      postMessageToRN({ type: "pause-record" });
+      return;
+    }
     if (mediaRecorderRef.current) mediaRecorderRef.current.pause();
-  }, []);
+  }, [hasReactNativeWebview, postMessageToRN]);
 
   const resume = useCallback(() => {
+    if (hasReactNativeWebview) {
+      postMessageToRN({ type: "resume-record" });
+      return;
+    }
     if (mediaRecorderRef.current) mediaRecorderRef.current.resume();
-  }, []);
+  }, [hasReactNativeWebview, postMessageToRN]);
 
   const onPressRecord = useCallback(() => {
     record();
@@ -150,14 +214,12 @@ const RecorderPage = () => {
   const onPressPause = useCallback(() => {
     if (state === "recording") {
       pause();
-      stopTimer();
-      setState("paused");
+      onPauseRecord();
     } else if (state === "paused") {
       resume();
-      startTimer();
-      setState("recording");
+      onResumeRecord();
     }
-  }, [pause, resume, startTimer, state, stopTimer]);
+  }, [onPauseRecord, onResumeRecord, pause, resume, state]);
 
   useEffect(() => {
     if (toastVisible) {
