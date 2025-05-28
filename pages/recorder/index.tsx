@@ -4,6 +4,22 @@ import { formatTime } from "@/modules/util";
 import { useRouter } from "next/router";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+// base64를 blob으로 변환하는 함수.
+const base64ToBlob = (base64: string, mimeType: string) => {
+  const byteCharacters = atob(base64);
+  const byteArrays = [];
+  for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+    const slice = byteCharacters.slice(offset, offset + 512);
+    const byteNumbers = new Array(slice.length);
+    for (let i = 0; i < slice.length; i++) {
+      byteNumbers[i] = slice.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    byteArrays.push(byteArray);
+  }
+  return new Blob(byteArrays, { type: mimeType });
+};
+
 const RecorderPage = () => {
   const router = useRouter();
 
@@ -119,7 +135,11 @@ const RecorderPage = () => {
         if (type === "onStartRecord") {
           onStartRecord();
         } else if (type === "onStopRecord") {
-          // onStopRecord({url, extension:"webm"});
+          const { audio, mimeType, ext } = data;
+          const blob = base64ToBlob(audio, mimeType);
+          const url = URL.createObjectURL(blob);
+
+          onStopRecord({ url, extension: ext });
         } else if (type === "onPauseRecord") {
           onPauseRecord();
         } else if (type === "onResumeRecord") {
@@ -135,7 +155,13 @@ const RecorderPage = () => {
         document.removeEventListener("message", handleMessage);
       };
     }
-  }, [hasReactNativeWebview, onPauseRecord, onResumeRecord, onStartRecord]);
+  }, [
+    hasReactNativeWebview,
+    onPauseRecord,
+    onResumeRecord,
+    onStartRecord,
+    onStopRecord,
+  ]);
 
   const record = useCallback(() => {
     if (hasReactNativeWebview) {
