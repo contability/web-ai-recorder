@@ -72,7 +72,7 @@ const RecorderPage = () => {
           segments: Array<{ start: number; end: number; text: string }>;
         };
       };
-      console.log(data);
+      console.log("🚀 ~ data ~ data:", data);
       const id = `${Date.now()}`;
       create({
         id,
@@ -83,6 +83,7 @@ const RecorderPage = () => {
           text: seg.text.trim(),
         })),
         photos,
+        createdAt: Date.now(),
       });
       router.push(`/recording/${id}`);
     },
