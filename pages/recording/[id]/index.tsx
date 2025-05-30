@@ -132,25 +132,23 @@ const Recording = () => {
     router.push(`/recording/${router.query.id}/photo`);
   }, [router]);
 
-  // const hasReactNativeWebview =
-  //   typeof window != "undefined" && window.ReactNativeWebView != null;
+  const hasReactNativeWebview =
+    typeof window !== "undefined" && window.ReactNativeWebView !== undefined;
 
   return (
     <div className="h-screen bg-white flex flex-col">
       <Header
         title={"음성 기록"}
-        // renderRight={() => {
-        //   if (!hasReactNativeWebview) {
-        //     return <></>;
-        //   }
-        //   return (
-        //     <button className="mr-[16px]" onClick={onPressImageButton}>
-        //       <span className="material-icons text-[#8E8E93] !text-[30px]">
-        //         image
-        //       </span>
-        //     </button>
-        //   );
-        // }}
+        renderRight={() => {
+          if (!hasReactNativeWebview) return <></>;
+          return (
+            <button className="mr-[16px]" onClick={onPressImageButton}>
+              <span className="material-icons text-[#8E8E93] !text-[30px]">
+                image
+              </span>
+            </button>
+          );
+        }}
       />
       <div className="flex">
         <Tab

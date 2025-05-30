@@ -3,9 +3,10 @@ import { useCallback } from "react";
 
 interface HeaderProps {
   title: string;
+  renderRight?: () => JSX.Element;
 }
 
-const Header = ({ title }: HeaderProps) => {
+const Header = ({ title, renderRight }: HeaderProps) => {
   const router = useRouter();
   const onPressBackButton = useCallback(() => {
     router.back();
@@ -22,7 +23,9 @@ const Header = ({ title }: HeaderProps) => {
       <div className="flex flex-1 justify-center">
         <span className="text-[15px] text-[#4A4A4A]">{title}</span>
       </div>
-      <div className="flex flex-1 "></div>
+      <div className="flex flex-1 justify-end">
+        {renderRight && renderRight()}
+      </div>
     </div>
   );
 };

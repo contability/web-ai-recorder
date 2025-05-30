@@ -26,11 +26,12 @@ const RecorderPage = () => {
   const [state, setState] = useState<"recording" | "paused" | null>(null);
   const [toastVisible, setToastVisible] = useState(false);
   const [time, setTime] = useState(0);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [photos, setPhotos] = useState<string[]>([]);
 
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
 
   const startTimer = useCallback(() => {
     timerRef.current = setInterval(() => {
@@ -81,10 +82,11 @@ const RecorderPage = () => {
           end: seg.end,
           text: seg.text.trim(),
         })),
+        photos,
       });
       router.push(`/recording/${id}`);
     },
-    [create, router]
+    [create, photos, router]
   );
 
   const onStartRecord = useCallback(() => {
@@ -118,7 +120,7 @@ const RecorderPage = () => {
 
   // ReactNativeWebview가 window 객체 안에 있다면 웹뷰를 이용해 앱으로 띄워졌다는 뜻.
   const hasReactNativeWebview =
-    typeof window !== "undefined" && window.ReactNativeWebView !== null;
+    typeof window !== "undefined" && window.ReactNativeWebView !== undefined;
 
   const postMessageToRN = useCallback(
     ({ type, data }: { type: string; data?: any }) => {
@@ -144,6 +146,8 @@ const RecorderPage = () => {
           onPauseRecord();
         } else if (type === "onResumeRecord") {
           onResumeRecord();
+        } else if (type === "onTakePhoto") {
+          setPhotos((prev) => prev.concat([data]));
         }
       };
       // 2개 다 넣어줘야 iOS, android 둘다 적용 됨.
@@ -247,6 +251,10 @@ const RecorderPage = () => {
     }
   }, [onPauseRecord, onResumeRecord, pause, resume, state]);
 
+  const onPressCamera = useCallback(() => {
+    postMessageToRN({ type: "open-camera" });
+  }, [postMessageToRN]);
+
   useEffect(() => {
     if (toastVisible) {
       const id = setTimeout(() => {
@@ -258,7 +266,19 @@ const RecorderPage = () => {
 
   return (
     <div className="h-dvh bg-white flex flex-col">
-      <Header title="녹음하기" />
+      <Header
+        title="녹음하기"
+        renderRight={() => {
+          if (!hasReactNativeWebview) return <></>;
+          return (
+            <button className="mr-[16px]" onClick={onPressCamera}>
+              <span className="material-icons text-[#8E8E93] text-[30px]">
+                photo_camera
+              </span>
+            </button>
+          );
+        }}
+      />
       <div className="flex flex-1 flex-col items-center pt-[211px]">
         {state === "recording" && (
           <button

@@ -24,6 +24,7 @@ export type Data = {
   scripts: Script[];
   // 요약 텍스트
   summary?: string;
+  photos?: string[];
 };
 
 type Database = {
